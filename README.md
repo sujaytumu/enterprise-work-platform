@@ -97,11 +97,13 @@ Frontend communicates via REST APIs.
 
 ## 🛠️ How to Run Locally
 
+
 ```bash
 
 ### 1️⃣ Clone the Repository
 git clone https://github.com/sujaytumu/enterprise-work-platform
 
+```bash
 
 2️⃣ Backend Setup
 
