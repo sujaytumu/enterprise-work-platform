@@ -97,10 +97,10 @@ Frontend communicates via REST APIs.
 
 ## 🛠️ How to Run Locally
 
-### 1️⃣ Clone the Repository
-
 ```bash
-git clone <your-repo-url>
+
+### 1️⃣ Clone the Repository
+git clone https://github.com/sujaytumu/enterprise-work-platform
 
 
 2️⃣ Backend Setup
@@ -131,13 +131,5 @@ npm start
 Frontend runs at:
 
 http://localhost:3000
-
-
-
-### Install Client packages
-
-```
-cd/client npm install or yarn
-```
 
 
