@@ -1,28 +1,138 @@
-## Full Stack Task Management App with React.js 18 & Spring Boot 3 : React, Chakra, Postgresql, Redux, Hibernate, Spring Security
+# Enterprise Task Management System
 
-### Features:
-- Chakra design
-- Full responsiveness
-- Redux as state management
-- JWT authentication
-- Image upload using Cloudinary CDN
-- Client form validation and handling using formik & yup
-- Server exception handling
-- Create project & assign developer to project
-- Assign task to specific developer with ending date
-- Send email with details when project leader assign a task to developer
-- Project leader can Update, Delete project & task
-- Developer can update task status
-- Customizable developer profile
+A full-stack enterprise-grade Task Management platform built using **Java (Spring Boot)**, **React**, and **PostgreSQL**.  
+Designed to simulate real-world internal work management systems used in large organizations.
 
-### Prerequisites
-- Node version 14.x
-- Java  jdk version 17
+---
 
-### Cloning the repository
-```
-git clone https://github.com/mehedi008h/project-mangement.git
-```
+## 🚀 Overview
+
+This system enables teams to manage projects, tasks, and workflows with secure role-based access control.  
+It follows clean architecture principles and production-ready backend practices.
+
+The platform is designed as a foundation for enterprise-level workflow systems.
+
+---
+
+## 🏗️ Tech Stack
+
+### Backend
+- Java 17
+- Spring Boot
+- Spring Security (JWT Authentication)
+- Spring Data JPA (Hibernate)
+- PostgreSQL
+- Bean Validation
+- Global Exception Handling
+
+### Frontend
+- React
+- REST API Integration
+- Role-Based UI Rendering
+
+### Database
+- PostgreSQL (Relational)
+- Normalized Schema Design
+- Indexed Fields for Performance
+
+---
+
+## 🔐 Features
+
+### Authentication & Authorization
+- JWT-based authentication
+- Role-based access control (Admin / Manager / User)
+- Secure REST endpoints
+
+### Project Management
+- Create and manage projects
+- Assign users to projects
+- Track project-level tasks
+
+### Task Management
+- Create tasks (Bug / Feature / Task)
+- Assign priority and status
+- Update task lifecycle
+- Track task ownership
+
+### Dashboard
+- View open vs completed tasks
+- Filter by project and status
+- Basic performance insights
+
+### API Architecture
+- Clean layered architecture:
+  - Controller
+  - Service
+  - Repository
+  - DTO
+- Centralized exception handling
+- Input validation
+
+---
+
+## 📊 Database Design (High-Level)
+
+Core Entities:
+- User
+- Role
+- Project
+- Task
+- Status
+
+Relational mapping handled via JPA/Hibernate.
+
+---
+
+## 🧱 Architecture
+
+Backend follows clean separation of concerns:
+
+controller → service → repository → database
+
+Frontend communicates via REST APIs.
+
+
+---
+
+## 🛠️ How to Run Locally
+
+### 1️⃣ Clone the Repository
+
+```bash
+git clone <your-repo-url>
+
+
+2️⃣ Backend Setup
+
+Update application.properties:
+
+spring.datasource.url=jdbc:postgresql://localhost:5432/taskdb
+spring.datasource.username=your_username
+spring.datasource.password=your_password
+spring.jpa.hibernate.ddl-auto=update
+
+
+Run backend:
+
+mvn spring-boot:run
+
+
+Backend runs at:
+
+http://localhost:8080
+
+3️⃣ Frontend Setup
+cd client
+npm install
+npm start
+
+
+Frontend runs at:
+
+http://localhost:3000
+
+
 
 ### Install Client packages
 
