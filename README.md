@@ -103,7 +103,6 @@ Frontend communicates via REST APIs.
 ### 1️⃣ Clone the Repository
 git clone https://github.com/sujaytumu/enterprise-work-platform
 
-```bash
 
 2️⃣ Backend Setup
 
