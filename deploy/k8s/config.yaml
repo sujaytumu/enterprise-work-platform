@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: payments-config
+data:
+  KAFKA_BOOTSTRAP_SERVERS: "kafka.payments.svc.cluster.local:9092"
+  CORE_ENGINE_URL: "http://core-processing-engine:8081"
+  DB_HOST: "postgres.payments.svc.cluster.local"
+  DB_PORT: "5432"
+  DB_NAME: "paymentsdb"
+---
+# DO NOT commit real secret values. Create this secret out-of-band instead, e.g.:
+#   kubectl create secret generic payments-db-secret \
+#     --from-literal=DB_USER=payments \
+#     --from-literal=DB_PASSWORD='<use a real secrets manager in production>'
+apiVersion: v1
+kind: Secret
+metadata:
+  name: payments-db-secret
+type: Opaque
+stringData:
+  DB_USER: "REPLACE_ME"
+  DB_PASSWORD: "REPLACE_ME"

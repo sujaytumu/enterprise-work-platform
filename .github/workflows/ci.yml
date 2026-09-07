@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-core-processing-engine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+          cache: maven
+      - name: Build and test
+        working-directory: core-processing-engine
+        run: mvn -B clean verify
+
+  build-payment-switch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+          cache: maven
+      - name: Build and test
+        working-directory: payment-switch
+        run: mvn -B clean verify
+
+  build-fraud-risk-engine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+          cache: maven
+      - name: Build and test
+        working-directory: fraud-risk-engine
+        run: mvn -B clean verify
+
+  docker-build:
+    needs: [build-core-processing-engine, build-payment-switch, build-fraud-risk-engine]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build core-processing-engine image
+        run: docker build -t core-processing-engine:ci ./core-processing-engine
+      - name: Build payment-switch image
+        run: docker build -t payment-switch:ci ./payment-switch
+      - name: Build fraud-risk-engine image
+        run: docker build -t fraud-risk-engine:ci ./fraud-risk-engine

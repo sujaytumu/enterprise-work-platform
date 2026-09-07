@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fraud-risk-engine
+  labels:
+    app: fraud-risk-engine
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: fraud-risk-engine
+  template:
+    metadata:
+      labels:
+        app: fraud-risk-engine
+    spec:
+      containers:
+        - name: fraud-risk-engine
+          # Replace with your registry path after `docker push`, e.g.:
+          # ghcr.io/sujaytumu/fraud-risk-engine:latest
+          image: REPLACE_ME/fraud-risk-engine:latest
+          ports:
+            - containerPort: 8083
+          envFrom:
+            - secretRef:
+                name: payments-db-secret
+            - configMapRef:
+                name: payments-config
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8083
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8083
+            initialDelaySeconds: 40
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fraud-risk-engine
+spec:
+  selector:
+    app: fraud-risk-engine
+  ports:
+    - port: 8083
+      targetPort: 8083
+  type: ClusterIP
