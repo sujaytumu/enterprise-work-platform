@@ -1,0 +1,17 @@
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Arial, sans-serif; background: #0b1020; color: #eef2ff; }
+.app { max-width: 1100px; margin: 0 auto; padding: 48px 24px; }
+.eyebrow { letter-spacing: 2px; font-size: 12px; color: #8ea4ff; }
+h1 { font-size: clamp(32px, 6vw, 56px); margin: 8px 0; }
+header > p:last-child { color: #b7c0d9; max-width: 700px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 16px; margin: 36px 0; }
+.card, .info { background: #151d35; border: 1px solid #2b385e; border-radius: 14px; padding: 20px; }
+.card { display: grid; grid-template-columns: 14px 1fr; gap: 12px; align-items: center; }
+.card h2 { margin: 0; font-size: 18px; }
+.card p { margin: 6px 0; color: #9eabc9; }
+.card strong { grid-column: 2; font-size: 12px; color: #b7c0d9; }
+.dot { width: 10px; height: 10px; border-radius: 50%; }
+.up { background: #43d17a; }
+.down { background: #e6a34a; }
+code { display: inline-block; background: #080c18; padding: 12px; border-radius: 8px; }
+.info p { color: #b7c0d9; }
