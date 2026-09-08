@@ -44,6 +44,30 @@ simplified vs. a real production system.
 - PostgreSQL (via Docker Compose) / H2 for quick local runs
 - Docker Compose for local dev; Kubernetes manifests in `deploy/k8s` for real clusters
 
+## Quick start
+
+For the complete local stack:
+
+```bash
+docker compose up --build
+```
+
+Open the dashboard at **http://localhost:3000**.
+
+Verify the complete runtime in another terminal:
+
+```bash
+bash scripts/smoke-test.sh
+```
+
+Useful shortcuts are also available:
+
+```bash
+make up
+make verify
+make down
+```
+
 ## Running locally
 
 ```bash
