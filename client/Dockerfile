@@ -1,0 +1,12 @@
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN CI=false npm run build
+
+FROM nginx:1.27-alpine
+COPY --from=build /app/build /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=10 CMD wget -qO- http://localhost/ >/dev/null 2>&1 || exit 1
