@@ -72,7 +72,7 @@ class RiskScoringServiceTest {
 
         assertEquals("BLOCK", response.getRecommendation());
         assertTrue(response.getRiskScore() >= 0.75);
-        assertEquals(3, response.getTriggeredReasons().size());
+        assertEquals(4, response.getTriggeredReasons().size());
     }
 
     @Test
