@@ -10,12 +10,9 @@ jobs:
   build-core-processing-engine:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          java-version: "17"
-          distribution: "temurin"
-          cache: maven
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with: {java-version: "17", distribution: "temurin", cache: maven}
       - name: Build and test
         working-directory: core-processing-engine
         run: mvn -B clean verify
@@ -23,12 +20,9 @@ jobs:
   build-payment-switch:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          java-version: "17"
-          distribution: "temurin"
-          cache: maven
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with: {java-version: "17", distribution: "temurin", cache: maven}
       - name: Build and test
         working-directory: payment-switch
         run: mvn -B clean verify
@@ -36,12 +30,9 @@ jobs:
   build-fraud-risk-engine:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          java-version: "17"
-          distribution: "temurin"
-          cache: maven
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with: {java-version: "17", distribution: "temurin", cache: maven}
       - name: Build and test
         working-directory: fraud-risk-engine
         run: mvn -B clean verify
@@ -49,12 +40,9 @@ jobs:
   build-tokenization-vault:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          java-version: "17"
-          distribution: "temurin"
-          cache: maven
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with: {java-version: "17", distribution: "temurin", cache: maven}
       - name: Build and test
         working-directory: tokenization-vault
         run: mvn -B clean verify
@@ -62,12 +50,9 @@ jobs:
   build-card-management:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          java-version: "17"
-          distribution: "temurin"
-          cache: maven
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with: {java-version: "17", distribution: "temurin", cache: maven}
       - name: Build and test
         working-directory: card-management
         run: mvn -B clean verify
@@ -75,12 +60,9 @@ jobs:
   build-clearing-settlement:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          java-version: "17"
-          distribution: "temurin"
-          cache: maven
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with: {java-version: "17", distribution: "temurin", cache: maven}
       - name: Build and test
         working-directory: clearing-settlement
         run: mvn -B clean verify
@@ -88,12 +70,9 @@ jobs:
   build-api-gateway:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          java-version: "17"
-          distribution: "temurin"
-          cache: maven
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with: {java-version: "17", distribution: "temurin", cache: maven}
       - name: Build and test
         working-directory: api-gateway
         run: mvn -B clean verify
@@ -102,7 +81,7 @@ jobs:
     needs: [build-core-processing-engine, build-payment-switch, build-fraud-risk-engine, build-tokenization-vault, build-card-management, build-clearing-settlement, build-api-gateway]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Build core-processing-engine image
         run: docker build -t core-processing-engine:ci ./core-processing-engine
       - name: Build payment-switch image
