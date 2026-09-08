@@ -64,8 +64,10 @@ services:
   payment-switch:
     build: ./payment-switch
     depends_on:
-      - kafka
-      - core-processing-engine
+      kafka:
+        condition: service_healthy
+      core-processing-engine:
+        condition: service_started
     ports:
       - "8082:8082"
     environment:
@@ -108,8 +110,10 @@ services:
   card-management:
     build: ./card-management
     depends_on:
-      - postgres
-      - tokenization-vault
+      postgres:
+        condition: service_healthy
+      tokenization-vault:
+        condition: service_started
     ports:
       - "8085:8085"
     environment:
@@ -140,12 +144,18 @@ services:
   api-gateway:
     build: ./api-gateway
     depends_on:
-      - core-processing-engine
-      - payment-switch
-      - fraud-risk-engine
-      - tokenization-vault
-      - card-management
-      - clearing-settlement
+      core-processing-engine:
+        condition: service_started
+      payment-switch:
+        condition: service_started
+      fraud-risk-engine:
+        condition: service_started
+      tokenization-vault:
+        condition: service_started
+      card-management:
+        condition: service_started
+      clearing-settlement:
+        condition: service_started
     ports:
       - "8080:8080"
     # nosecurity profile: local demo only, disables JWT validation.
