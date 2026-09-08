@@ -5,14 +5,22 @@ metadata:
 data:
   KAFKA_BOOTSTRAP_SERVERS: "kafka.payments.svc.cluster.local:9092"
   CORE_ENGINE_URL: "http://core-processing-engine:8081"
+  SWITCH_URL: "http://payment-switch:8082"
+  FRAUD_URL: "http://fraud-risk-engine:8083"
+  VAULT_URL: "http://tokenization-vault:8084"
+  CMS_URL: "http://card-management:8085"
+  SETTLEMENT_URL: "http://clearing-settlement:8086"
   DB_HOST: "postgres.payments.svc.cluster.local"
   DB_PORT: "5432"
   DB_NAME: "paymentsdb"
+  # REPLACE before deploying anywhere real — see api-gateway's SecurityConfig.
+  OAUTH2_ISSUER_URI: "https://CHANGE-ME.example-issuer.com/"
 ---
 # DO NOT commit real secret values. Create this secret out-of-band instead, e.g.:
 #   kubectl create secret generic payments-db-secret \
 #     --from-literal=DB_USER=payments \
-#     --from-literal=DB_PASSWORD='<use a real secrets manager in production>'
+#     --from-literal=DB_PASSWORD='<use a real secrets manager in production>' \
+#     --from-literal=VAULT_ENCRYPTION_KEY="$(openssl rand -base64 32)"
 apiVersion: v1
 kind: Secret
 metadata:
@@ -21,3 +29,6 @@ type: Opaque
 stringData:
   DB_USER: "REPLACE_ME"
   DB_PASSWORD: "REPLACE_ME"
+  # 32-byte AES-256 key, base64-encoded. Generate your own with: openssl rand -base64 32
+  # NEVER reuse the sample key from tokenization-vault/application.yml.
+  VAULT_ENCRYPTION_KEY: "REPLACE_ME"

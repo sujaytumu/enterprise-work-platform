@@ -46,8 +46,60 @@ jobs:
         working-directory: fraud-risk-engine
         run: mvn -B clean verify
 
+  build-tokenization-vault:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+          cache: maven
+      - name: Build and test
+        working-directory: tokenization-vault
+        run: mvn -B clean verify
+
+  build-card-management:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+          cache: maven
+      - name: Build and test
+        working-directory: card-management
+        run: mvn -B clean verify
+
+  build-clearing-settlement:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+          cache: maven
+      - name: Build and test
+        working-directory: clearing-settlement
+        run: mvn -B clean verify
+
+  build-api-gateway:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+          cache: maven
+      - name: Build and test
+        working-directory: api-gateway
+        run: mvn -B clean verify
+
   docker-build:
-    needs: [build-core-processing-engine, build-payment-switch, build-fraud-risk-engine]
+    needs: [build-core-processing-engine, build-payment-switch, build-fraud-risk-engine, build-tokenization-vault, build-card-management, build-clearing-settlement, build-api-gateway]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -57,3 +109,11 @@ jobs:
         run: docker build -t payment-switch:ci ./payment-switch
       - name: Build fraud-risk-engine image
         run: docker build -t fraud-risk-engine:ci ./fraud-risk-engine
+      - name: Build tokenization-vault image
+        run: docker build -t tokenization-vault:ci ./tokenization-vault
+      - name: Build card-management image
+        run: docker build -t card-management:ci ./card-management
+      - name: Build clearing-settlement image
+        run: docker build -t clearing-settlement:ci ./clearing-settlement
+      - name: Build api-gateway image
+        run: docker build -t api-gateway:ci ./api-gateway

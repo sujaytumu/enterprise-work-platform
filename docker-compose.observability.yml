@@ -1,0 +1,98 @@
+# Observability stack: Prometheus (metrics), Grafana (dashboards),
+# Zipkin (distributed tracing), Loki + Promtail (centralized logs).
+#
+# This is a separate overlay file, not merged into the base docker-compose.yml,
+# so you can run the platform lean day-to-day and opt into the full
+# observability stack only when you want to look at it:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.observability.yml up --build
+#
+# Grafana: http://localhost:3000 (login: admin / admin — change this if you
+#   ever run this anywhere but your own machine)
+# Prometheus: http://localhost:9090
+# Zipkin UI: http://localhost:9411
+
+version: "3.8"
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+
+  zipkin:
+    image: openzipkin/zipkin:2.24
+    ports:
+      - "9411:9411"
+
+  loki:
+    image: grafana/loki:2.9.8
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./observability/loki-config.yml:/etc/loki/local-config.yaml:ro
+    ports:
+      - "3100:3100"
+
+  promtail:
+    image: grafana/promtail:2.9.8
+    volumes:
+      - ./observability/promtail/promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+      - zipkin
+      - loki
+
+  # Override the 7 app services to point at Zipkin and emit JSON logs.
+  # Everything else (ports, DB, Kafka wiring) is inherited from docker-compose.yml.
+  core-processing-engine:
+    environment:
+      ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
+      SPRING_PROFILES_ACTIVE: json-logs
+
+  payment-switch:
+    environment:
+      ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
+      SPRING_PROFILES_ACTIVE: json-logs
+
+  fraud-risk-engine:
+    environment:
+      ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
+      SPRING_PROFILES_ACTIVE: json-logs
+
+  tokenization-vault:
+    environment:
+      ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
+      SPRING_PROFILES_ACTIVE: json-logs
+
+  card-management:
+    environment:
+      ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
+      SPRING_PROFILES_ACTIVE: json-logs
+
+  clearing-settlement:
+    environment:
+      ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
+      SPRING_PROFILES_ACTIVE: json-logs
+
+  api-gateway:
+    environment:
+      ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
+      # Keep nosecurity for local demo; add json-logs alongside it.
+      SPRING_PROFILES_ACTIVE: nosecurity,json-logs

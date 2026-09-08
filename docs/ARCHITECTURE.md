@@ -46,7 +46,7 @@ Merchant/Acquirer
   dailyLimit, status (ACTIVE/BLOCKED/CLOSED)
 - `Transaction`: id, accountId, amount, merchantId, status, timestamp, mti
 
-## Fraud & Risk Engine (built)
+## Fraud & Risk Engine
 
 `fraud-risk-engine` (port 8083) adds a `/api/v1/fraud/score` endpoint that
 scores a transaction using multiple weighted signals — amount vs. account
@@ -63,17 +63,119 @@ production version would need (labeled training data, a real model,
 continuous retraining, device/IP signals). The core-processing-engine's
 in-process velocity check still runs independently as a fast first-pass
 filter; `fraud-risk-engine` is the deeper, callable service for a more
-complete picture. Wiring the switch/core engine to call
-`fraud-risk-engine` synchronously before authorizing is a natural next step.
+complete picture.
 
-## Next phases
+## Tokenization Vault
 
-1. **Tokenization Vault** — replace PAN with a vault-issued token at ingress;
-   downstream services never see the real PAN.
-2. **Card Management System** — card issuance, activation, PIN set (hashed,
-   never stored plaintext), lifecycle state machine.
-3. **Clearing & Settlement** — batch job that nets positions between issuer
-   and acquirer accounts at end of day, from the `transactions.authorized`
-   Kafka log.
-4. **API Gateway** — OAuth2 client-credentials for bank/merchant callers,
-   mTLS termination, rate limiting.
+`tokenization-vault` (port 8084) is deliberately the **only** service that
+ever handles a raw PAN. Every other service — core engine, switch, fraud
+engine, CMS — works exclusively with vault-issued opaque tokens
+(`tok_...`). This is the standard PCI-DSS pattern: shrink the "cardholder
+data environment" down to one auditable, tightly-locked-down service instead
+of scattering raw card numbers across the whole platform.
+
+Encryption at rest uses AES-256-GCM — but the key currently lives in an
+application config property, which is a demo-grade shortcut. A real vault
+uses an HSM or managed KMS so the raw key never exists in application
+memory; see `EncryptionService`'s javadoc for the full gap list.
+
+## Card Management System (CMS)
+
+`card-management` (port 8085) owns card issuance and lifecycle:
+`ISSUED → ACTIVE → (BLOCKED ↔ ACTIVE) → CLOSED`, enforced as an explicit
+state machine in `CardLifecycleService` — invalid transitions (e.g.
+activating an already-active card, blocking a closed one) are rejected with
+a clear error rather than silently allowed. Issuance calls the
+tokenization-vault to get a token for a (synthetic, demo-only) PAN and never
+touches the raw card number itself. PINs are hashed with bcrypt and the
+plaintext PIN is never persisted.
+
+## Clearing & Settlement
+
+`clearing-settlement` (port 8086) consumes the core engine's
+`transactions.authorized` Kafka stream continuously, recording each one to
+an append-only ledger. A scheduled job (default: 23:59 daily, configurable
+via cron) bundles all unsettled transactions into a `SettlementBatch` and
+computes net positions per merchant. This demonstrates the netting/batching
+pattern real settlement is built on — a full implementation would also
+reconcile against the card network's own settlement files, handle
+chargebacks/disputes that arrive after authorization, and produce actual
+fund transfer instructions (ACH/wire) to move real money between issuer and
+acquirer accounts.
+
+## API Gateway
+
+`api-gateway` (port 8080) is the single entry point for external callers
+(banks, merchants, mobile apps), built on Spring Cloud Gateway. It routes
+path prefixes (`/core/**`, `/switch/**`, `/fraud/**`, `/vault/**`,
+`/cards/**`, `/settlement/**`) to the corresponding backend service, and
+validates OAuth2 JWT bearer tokens on every route except `/actuator/health`.
+
+Two things are explicitly NOT included, because they need infrastructure
+beyond a single Spring Boot service:
+- **A real OAuth2 authorization server.** The gateway validates tokens
+  issued elsewhere — point `OAUTH2_ISSUER_URI` at Keycloak, Auth0, Okta, AWS
+  Cognito, or similar. For local demo only, the `nosecurity` Spring profile
+  disables validation entirely — never use it anywhere but your own machine.
+- **mTLS termination.** Real bank/merchant integrations typically require
+  mutual TLS (both sides present certificates), which is normally handled
+  by a dedicated ingress/load balancer (e.g. an AWS NLB with mTLS, or
+  Istio/Linkerd at the mesh layer) in front of the gateway, not by
+  application code.
+
+## End-to-end flow
+
+```
+Bank / Merchant / Mobile App
+      │  OAuth2 bearer token + request
+      ▼
+┌─────────────┐
+│ api-gateway │  validates JWT, routes by path
+└──────┬──────┘
+       │
+       ▼
+┌────────────────┐   issue/activate/PIN    ┌──────────────────┐   tokenize/detokenize   ┌────────────────────┐
+│ card-management │ ───────────────────────▶│ (customer setup)  │────────────────────────▶│ tokenization-vault  │
+└────────────────┘                          └──────────────────┘                          └────────────────────┘
+       │
+       │ (at transaction time)
+       ▼
+┌────────────────┐   routes to issuer   ┌──────────────────────┐
+│  payment-switch  │ ────────────────────▶│ core-processing-engine │  balance/limit/status + in-process velocity check
+└────────────────┘                       └──────────────────────┘
+                                                    │
+                                                    │ publishes to Kafka
+                                                    ▼
+                                          transactions.authorized / declined
+                                                    │
+                                      ┌─────────────┴─────────────┐
+                                      ▼                             ▼
+                          ┌───────────────────┐         ┌──────────────────────┐
+                          │  fraud-risk-engine  │         │  clearing-settlement   │
+                          │  (passive Kafka       │         │  nets positions,       │
+                          │   monitoring today)   │         │  end-of-day batch      │
+                          └───────────────────┘         └──────────────────────┘
+```
+
+**Note on fraud-risk-engine wiring**: today it's only wired as a passive Kafka
+consumer (watches transactions after the fact) plus a standalone `/score`
+endpoint any caller can invoke directly. It is **not yet called synchronously
+by `payment-switch` or `core-processing-engine`** before a transaction is
+approved — that's a real gap, not a design choice. Wiring the switch or core
+engine to call `fraud-risk-engine`'s `/api/v1/fraud/score` before finalizing
+the authorization decision is the natural next step to close this loop.
+
+## What's still not built
+
+- Real card network membership/connectivity (Visa/Mastercard/etc.) — this
+  platform models the internal architecture pattern, not external network
+  integration, which requires a certification process with the networks
+  themselves.
+- A real OAuth2 authorization server and mTLS-terminating ingress (see
+  API Gateway section above).
+- KYC/AML/sanctions screening tooling.
+- A trained fraud ML model (currently rule-based).
+- Multi-region active-active deployment — the K8s manifests deploy to one
+  cluster; true multi-region needs cross-region data replication strategy
+  (CockroachDB or Cassandra, as the original requirements mentioned) which
+  is a significant infrastructure project on its own.

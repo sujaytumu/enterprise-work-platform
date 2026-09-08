@@ -74,5 +74,73 @@ services:
       DB_PASSWORD: payments
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
 
+  tokenization-vault:
+    build: ./tokenization-vault
+    depends_on:
+      - postgres
+    ports:
+      - "8084:8084"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: paymentsdb
+      DB_USER: payments
+      DB_PASSWORD: payments
+      # Demo key only — see tokenization-vault/src/main/resources/application.yml
+      VAULT_ENCRYPTION_KEY: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
+
+  card-management:
+    build: ./card-management
+    depends_on:
+      - postgres
+      - tokenization-vault
+    ports:
+      - "8085:8085"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: paymentsdb
+      DB_USER: payments
+      DB_PASSWORD: payments
+      VAULT_URL: http://tokenization-vault:8084
+
+  clearing-settlement:
+    build: ./clearing-settlement
+    depends_on:
+      - postgres
+      - kafka
+    ports:
+      - "8086:8086"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: paymentsdb
+      DB_USER: payments
+      DB_PASSWORD: payments
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+
+  api-gateway:
+    build: ./api-gateway
+    depends_on:
+      - core-processing-engine
+      - payment-switch
+      - fraud-risk-engine
+      - tokenization-vault
+      - card-management
+      - clearing-settlement
+    ports:
+      - "8080:8080"
+    # nosecurity profile: local demo only, disables JWT validation.
+    # Remove this env var (and configure OAUTH2_ISSUER_URI instead) for
+    # anything beyond your own machine.
+    environment:
+      SPRING_PROFILES_ACTIVE: nosecurity
+      CORE_ENGINE_URL: http://core-processing-engine:8081
+      SWITCH_URL: http://payment-switch:8082
+      FRAUD_URL: http://fraud-risk-engine:8083
+      VAULT_URL: http://tokenization-vault:8084
+      CMS_URL: http://card-management:8085
+      SETTLEMENT_URL: http://clearing-settlement:8086
+
 volumes:
   pgdata:

@@ -1,0 +1,8 @@
+# Activate with SPRING_PROFILES_ACTIVE=nosecurity for local demo purposes
+# only — this disables JWT validation entirely so you can exercise routing
+# without standing up a real OAuth2 provider. NEVER use this profile
+# anywhere reachable outside your own machine.
+spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration

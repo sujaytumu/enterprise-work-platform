@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: card-management
+  labels:
+    app: card-management
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: card-management
+  template:
+    metadata:
+      labels:
+        app: card-management
+    spec:
+      containers:
+        - name: card-management
+          # Replace with your registry path after "docker push", e.g.:
+          # ghcr.io/sujaytumu/card-management:latest
+          image: REPLACE_ME/card-management:latest
+          ports:
+            - containerPort: 8085
+          envFrom:
+            - secretRef:
+                name: payments-db-secret
+            - configMapRef:
+                name: payments-config
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8085
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8085
+            initialDelaySeconds: 40
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: card-management
+spec:
+  selector:
+    app: card-management
+  ports:
+    - port: 8085
+      targetPort: 8085
+  type: ClusterIP

@@ -1,0 +1,77 @@
+{
+  "title": "Payment Platform Overview",
+  "uid": "payments-overview",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "refresh": "10s",
+  "time": { "from": "now-30m", "to": "now" },
+  "panels": [
+    {
+      "title": "Request Rate by Service (req/s)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum by (application) (rate(http_server_requests_seconds_count[1m]))",
+          "legendFormat": "{{application}}"
+        }
+      ]
+    },
+    {
+      "title": "Error Rate by Service (5xx req/s)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum by (application) (rate(http_server_requests_seconds_count{status=~\"5..\"}[1m]))",
+          "legendFormat": "{{application}}"
+        }
+      ]
+    },
+    {
+      "title": "p95 Latency by Service (s)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (application, le) (rate(http_server_requests_seconds_bucket[5m])))",
+          "legendFormat": "{{application}} p95"
+        }
+      ]
+    },
+    {
+      "title": "JVM Heap Used by Service (bytes)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "sum by (application) (jvm_memory_used_bytes{area=\"heap\"})",
+          "legendFormat": "{{application}}"
+        }
+      ]
+    },
+    {
+      "title": "Authorization Decisions (approved vs declined)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "description": "Requires custom counter metrics — see docs/OBSERVABILITY.md for how to add business-level metrics beyond the free HTTP/JVM metrics shown elsewhere on this dashboard.",
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_requests_seconds_count{application=\"core-processing-engine\", uri=\"/api/v1/authorizations\"}[1m]))",
+          "legendFormat": "authorization requests/s"
+        }
+      ]
+    },
+    {
+      "title": "Fraud Alerts Triggered",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_requests_seconds_count{application=\"fraud-risk-engine\", uri=\"/api/v1/fraud/score\"}[1m]))",
+          "legendFormat": "fraud score requests/s"
+        }
+      ]
+    }
+  ]
+}

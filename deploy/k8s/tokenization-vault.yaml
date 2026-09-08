@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tokenization-vault
+  labels:
+    app: tokenization-vault
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: tokenization-vault
+  template:
+    metadata:
+      labels:
+        app: tokenization-vault
+    spec:
+      containers:
+        - name: tokenization-vault
+          # Replace with your registry path after "docker push", e.g.:
+          # ghcr.io/sujaytumu/tokenization-vault:latest
+          image: REPLACE_ME/tokenization-vault:latest
+          ports:
+            - containerPort: 8084
+          envFrom:
+            - secretRef:
+                name: payments-db-secret
+            - configMapRef:
+                name: payments-config
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8084
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8084
+            initialDelaySeconds: 40
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tokenization-vault
+spec:
+  selector:
+    app: tokenization-vault
+  ports:
+    - port: 8084
+      targetPort: 8084
+  type: ClusterIP

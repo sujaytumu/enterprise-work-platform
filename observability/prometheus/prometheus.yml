@@ -1,0 +1,39 @@
+global:
+  scrape_interval: 10s
+  evaluation_interval: 10s
+
+scrape_configs:
+  - job_name: "api-gateway"
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["api-gateway:8080"]
+
+  - job_name: "core-processing-engine"
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["core-processing-engine:8081"]
+
+  - job_name: "payment-switch"
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["payment-switch:8082"]
+
+  - job_name: "fraud-risk-engine"
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["fraud-risk-engine:8083"]
+
+  - job_name: "tokenization-vault"
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["tokenization-vault:8084"]
+
+  - job_name: "card-management"
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["card-management:8085"]
+
+  - job_name: "clearing-settlement"
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["clearing-settlement:8086"]

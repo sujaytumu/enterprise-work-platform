@@ -1,0 +1,39 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: tokenization-vault
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:paymentsdb}
+    username: ${DB_USER:payments}
+    password: ${DB_PASSWORD:payments}
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+# DEMO KEY ONLY — a 32-byte AES-256 key, base64-encoded. Generate your own with:
+#   openssl rand -base64 32
+# NEVER reuse this sample key, and never commit a real key to git — use a
+# KMS/HSM or a secrets manager, injected via env var / K8s secret at runtime.
+vault:
+  encryption-key-base64: ${VAULT_ENCRYPTION_KEY:MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  metrics:
+    tags:
+      application: tokenization-vault
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: ${ZIPKIN_ENDPOINT:http://localhost:9411/api/v2/spans}
+
+logging:
+  level:
+    com.enterprise.vault: INFO

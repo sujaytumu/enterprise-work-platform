@@ -1,0 +1,72 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: payment-switch
+          uri: ${SWITCH_URL:http://localhost:8082}
+          predicates:
+            - Path=/switch/**
+          filters:
+            - StripPrefix=1
+        - id: core-processing-engine
+          uri: ${CORE_ENGINE_URL:http://localhost:8081}
+          predicates:
+            - Path=/core/**
+          filters:
+            - StripPrefix=1
+        - id: fraud-risk-engine
+          uri: ${FRAUD_URL:http://localhost:8083}
+          predicates:
+            - Path=/fraud/**
+          filters:
+            - StripPrefix=1
+        - id: tokenization-vault
+          uri: ${VAULT_URL:http://localhost:8084}
+          predicates:
+            - Path=/vault/**
+          filters:
+            - StripPrefix=1
+        - id: card-management
+          uri: ${CMS_URL:http://localhost:8085}
+          predicates:
+            - Path=/cards/**
+          filters:
+            - StripPrefix=1
+        - id: clearing-settlement
+          uri: ${SETTLEMENT_URL:http://localhost:8086}
+          predicates:
+            - Path=/settlement/**
+          filters:
+            - StripPrefix=1
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Point this at a real OAuth2/OIDC provider's issuer URL before
+          # deploying anywhere real — e.g. https://your-tenant.auth0.com/
+          issuer-uri: ${OAUTH2_ISSUER_URI:https://CHANGE-ME.example-issuer.com/}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway,prometheus,metrics
+  metrics:
+    tags:
+      application: api-gateway
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: ${ZIPKIN_ENDPOINT:http://localhost:9411/api/v2/spans}
+
+logging:
+  level:
+    com.enterprise.gateway: INFO
+    org.springframework.cloud.gateway: INFO
