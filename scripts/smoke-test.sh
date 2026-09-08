@@ -1,25 +1,40 @@
-#!/usr/bin/env sh
-set -eu
+#!/usr/bin/env bash
+set -euo pipefail
 
-services="api-gateway:8080 core-processing-engine:8081 payment-switch:8082 fraud-risk-engine:8083 tokenization-vault:8084 card-management:8085 clearing-settlement:8086"
+services=(
+  "api-gateway:8080"
+  "core-processing-engine:8081"
+  "payment-switch:8082"
+  "fraud-risk-engine:8083"
+  "tokenization-vault:8084"
+  "card-management:8085"
+  "clearing-settlement:8086"
+)
 
-for service in $services; do
+for service in "${services[@]}"; do
   name="${service%%:*}"
   port="${service##*:}"
   url="http://localhost:${port}/actuator/health"
   echo "Checking ${name}: ${url}"
-  i=0
-  until curl -fsS "$url" >/dev/null; do
-    i=$((i + 1))
-    if [ "$i" -ge 30 ]; then
+
+  for ((i=1; i<=60; i++)); do
+    if curl -fsS "$url" >/dev/null; then
+      echo "OK: ${name}"
+      break
+    fi
+    if [[ "$i" == "60" ]]; then
       echo "FAILED: ${name} did not become healthy"
       exit 1
     fi
     sleep 2
   done
-  echo "OK: ${name}"
 done
 
 curl -fsS http://localhost:3000/ >/dev/null
 echo "OK: client"
+
+for port in 8080 8081 8082 8083 8084 8085 8086; do
+  curl -fsS "http://localhost:3000/health/${port}" >/dev/null
+done
+echo "OK: same-origin gateway health aggregation"
 echo "Smoke test passed."
