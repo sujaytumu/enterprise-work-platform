@@ -45,7 +45,7 @@ RESPONSE=$(curl -fsS -X POST "$SWITCH_URL/api/v1/switch/authorize" \
   -H 'Content-Type: application/json' \
   -d "{\"cardToken\":\"$TOKEN\",\"amount\":25.00,\"merchantId\":\"DEMO_MERCHANT\"}")
 echo "$RESPONSE"
-RESPONSE_CODE=$(echo "$RESPONSE" | python3 -c 'import sys,json; d=json.load(sys.stdin); print(d.get("39") or d.get("responseCode") or "")')
+RESPONSE_CODE=$(echo "$RESPONSE" | python3 -c 'import sys,json; d=json.load(sys.stdin); print(d.get("fields", {}).get("39") or d.get("responseCode") or "")')
 if [[ "$RESPONSE_CODE" != "00" ]]; then
   echo "E2E authorization was declined with response code: $RESPONSE_CODE" >&2
   exit 1
