@@ -1,0 +1,41 @@
+server {
+  listen ${PORT};
+  server_name _;
+
+  root /usr/share/nginx/html;
+  index index.html;
+
+  location /health/ {
+    proxy_pass http://${GATEWAY_HOSTPORT}/health/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+
+  location /core/ {
+    proxy_pass http://${GATEWAY_HOSTPORT}/core/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+
+  location /fraud/ {
+    proxy_pass http://${GATEWAY_HOSTPORT}/fraud/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+
+  location /vault/ {
+    proxy_pass http://${GATEWAY_HOSTPORT}/vault/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+
+  location /cards/ {
+    proxy_pass http://${GATEWAY_HOSTPORT}/cards/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+
+  location / {
+    try_files $uri $uri/ /index.html;
+  }
+}
