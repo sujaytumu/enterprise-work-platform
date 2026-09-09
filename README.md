@@ -44,6 +44,30 @@ simplified vs. a real production system.
 - PostgreSQL (via Docker Compose) / H2 for quick local runs
 - Docker Compose for local dev; Kubernetes manifests in `deploy/k8s` for real clusters
 
+## Quick start
+
+For the complete local stack:
+
+```bash
+docker compose up --build
+```
+
+Open the dashboard at **http://localhost:3000**.
+
+Verify the complete runtime in another terminal:
+
+```bash
+bash scripts/smoke-test.sh
+```
+
+Useful shortcuts are also available:
+
+```bash
+make up
+make verify
+make down
+```
+
 ## Running locally
 
 ```bash
@@ -95,6 +119,17 @@ git push -u origin main
 
 (Use a freshly generated token or SSH key — never reuse a token that was ever
 pasted in a chat or logged anywhere.)
+
+## CI/CD
+
+Pull requests are validated with:
+
+- Java build/test jobs for every backend service
+- React client build
+- Docker image builds
+- Full Docker Compose runtime smoke verification
+
+A manual deployment workflow is also included in `.github/workflows/deploy.yml`. It builds images to GitHub Container Registry and can deploy to Kubernetes after a cluster kubeconfig is provided as the `KUBE_CONFIG_DATA` GitHub environment secret.
 
 ## Deploying to a real cluster
 

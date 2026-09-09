@@ -27,17 +27,32 @@ public class RoutingService {
 
     private final RestTemplate restTemplate;
     private final TransactionEventProducer eventProducer;
+    private final FraudRiskClient fraudRiskClient;
 
     @Value("${issuer.core-processing-engine.url}")
     private String coreProcessingEngineUrl;
 
-    public RoutingService(RestTemplate restTemplate, TransactionEventProducer eventProducer) {
+    public RoutingService(RestTemplate restTemplate, TransactionEventProducer eventProducer, FraudRiskClient fraudRiskClient) {
         this.restTemplate = restTemplate;
         this.eventProducer = eventProducer;
+        this.fraudRiskClient = fraudRiskClient;
     }
 
     public Iso8583Message route(Iso8583Message request) {
         eventProducer.publishRouted(request);
+
+        FraudRiskClient.Decision fraudDecision = fraudRiskClient.score(request);
+        if (fraudDecision == FraudRiskClient.Decision.BLOCK) {
+            log.warn("Transaction blocked by fraud engine for STAN {}", request.getStan());
+            return Iso8583Message.authorizationResponse(request, "05");
+        }
+        if (fraudDecision == FraudRiskClient.Decision.UNAVAILABLE) {
+            log.error("Fraud engine unavailable for STAN {}; declining safely", request.getStan());
+            return Iso8583Message.authorizationResponse(request, "91");
+        }
+        if (fraudDecision == FraudRiskClient.Decision.REVIEW) {
+            log.info("Fraud engine marked STAN {} for review; continuing issuer authorization", request.getStan());
+        }
 
         Map<String, Object> payload = Map.of(
                 "cardToken", request.getPan(),

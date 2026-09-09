@@ -77,8 +77,23 @@ jobs:
         working-directory: api-gateway
         run: mvn -B clean verify
 
+  build-client:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+      - name: Install and build client
+        working-directory: client
+        run: |
+          npm ci
+          CI=false npm run build
+
   docker-build:
-    needs: [build-core-processing-engine, build-payment-switch, build-fraud-risk-engine, build-tokenization-vault, build-card-management, build-clearing-settlement, build-api-gateway]
+    needs: [build-core-processing-engine, build-payment-switch, build-fraud-risk-engine, build-tokenization-vault, build-card-management, build-clearing-settlement, build-api-gateway, build-client]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -96,3 +111,25 @@ jobs:
         run: docker build -t clearing-settlement:ci ./clearing-settlement
       - name: Build api-gateway image
         run: docker build -t api-gateway:ci ./api-gateway
+
+      - name: Build client image
+        run: docker build -t payment-platform-client:ci ./client
+
+  runtime-smoke:
+    needs: docker-build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - name: Start complete platform
+        run: docker compose up -d --build
+      - name: Run runtime smoke test
+        run: bash scripts/smoke-test.sh
+      - name: Run synthetic end-to-end demo
+        run: DIRECT_E2E=true bash scripts/e2e-demo.sh
+      - name: Print service logs on failure
+        if: failure()
+        run: docker compose logs --no-color
+      - name: Stop platform
+        if: always()
+        run: docker compose down -v

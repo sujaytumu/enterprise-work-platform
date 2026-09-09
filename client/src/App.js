@@ -1,23 +1,4 @@
+import React from "react";
 import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import {Auth, Home, ProjectDetails, Projects, Tasks, UpdateProject} from "./pages";
-
-
-function App() {
-    return (
-        <BrowserRouter>
-            <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/auth" element={<Auth />} />
-                {/* project  */}
-                <Route path="/projects" element={<Projects />} />
-                <Route path="/project/:id" element={<ProjectDetails />} />
-                <Route path="/project/update/:id" element={<UpdateProject />} />
-                {/* task  */}
-                <Route path="/task" element={<Tasks />} />
-            </Routes>
-        </BrowserRouter>
-    );
-}
-
-export default App;
+const services=[["API Gateway",8080],["Core Processing",8081],["Payment Switch",8082],["Fraud Risk Engine",8083],["Tokenization Vault",8084],["Card Management",8085],["Clearing & Settlement",8086]];
+export default function App(){const [status,setStatus]=React.useState({});React.useEffect(()=>{let active=true;const check=async()=>{const next={};await Promise.all(services.map(async([name,port])=>{try{next[name]=(await fetch("/health/"+port)).ok}catch(e){next[name]=false}}));if(active)setStatus(next)};check();const id=setInterval(check,5000);return()=>{active=false;clearInterval(id)}},[]);return <main className="platform"><p className="eyebrow">REFERENCE IMPLEMENTATION</p><h1>Enterprise Payment Platform</h1><p className="subtitle">Live health dashboard for the local microservice stack.</p><section className="grid">{services.map(([name,port])=><article className="service" key={name}><span className={"dot "+(status[name]?"online":"offline")}></span><div><h2>{name}</h2><p>localhost:{port}</p></div><b>{status[name]?"ONLINE":"STARTING / OFFLINE"}</b></article>)}</section><section className="quick"><h2>Quick start</h2><code>docker compose up --build</code><p>Status refreshes every 5 seconds.</p></section></main>}
