@@ -1,0 +1,162 @@
+services:
+  - type: web
+    name: enterprise-payment-platform
+    runtime: docker
+    plan: free
+    region: singapore
+    rootDir: client
+    dockerfilePath: ./Dockerfile.render
+    dockerContext: .
+    healthCheckPath: /
+    envVars:
+      - key: GATEWAY_HOSTPORT
+        fromService:
+          name: enterprise-payment-gateway
+          type: web
+          property: hostport
+
+  - type: web
+    name: enterprise-payment-gateway
+    runtime: docker
+    plan: free
+    region: singapore
+    rootDir: api-gateway
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SERVER_PORT
+        value: "10000"
+      - key: SPRING_PROFILES_ACTIVE
+        value: nosecurity
+      - key: CORE_ENGINE_URL
+        fromService:
+          name: enterprise-core-processing
+          type: web
+          property: hostport
+      - key: FRAUD_URL
+        fromService:
+          name: enterprise-fraud-risk
+          type: web
+          property: hostport
+      - key: VAULT_URL
+        fromService:
+          name: enterprise-tokenization-vault
+          type: web
+          property: hostport
+      - key: CMS_URL
+        fromService:
+          name: enterprise-card-management
+          type: web
+          property: hostport
+
+  - type: web
+    name: enterprise-core-processing
+    runtime: docker
+    plan: free
+    region: singapore
+    rootDir: core-processing-engine
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SERVER_PORT
+        value: "10000"
+      - key: DB_HOST
+        fromDatabase: { name: enterprise-payment-db, property: host }
+      - key: DB_PORT
+        fromDatabase: { name: enterprise-payment-db, property: port }
+      - key: DB_NAME
+        fromDatabase: { name: enterprise-payment-db, property: database }
+      - key: DB_USER
+        fromDatabase: { name: enterprise-payment-db, property: user }
+      - key: DB_PASSWORD
+        fromDatabase: { name: enterprise-payment-db, property: password }
+      - key: MANAGEMENT_HEALTH_KAFKA_ENABLED
+        value: "false"
+
+  - type: web
+    name: enterprise-fraud-risk
+    runtime: docker
+    plan: free
+    region: singapore
+    rootDir: fraud-risk-engine
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SERVER_PORT
+        value: "10000"
+      - key: DB_HOST
+        fromDatabase: { name: enterprise-payment-db, property: host }
+      - key: DB_PORT
+        fromDatabase: { name: enterprise-payment-db, property: port }
+      - key: DB_NAME
+        fromDatabase: { name: enterprise-payment-db, property: database }
+      - key: DB_USER
+        fromDatabase: { name: enterprise-payment-db, property: user }
+      - key: DB_PASSWORD
+        fromDatabase: { name: enterprise-payment-db, property: password }
+      - key: MANAGEMENT_HEALTH_KAFKA_ENABLED
+        value: "false"
+
+  - type: web
+    name: enterprise-tokenization-vault
+    runtime: docker
+    plan: free
+    region: singapore
+    rootDir: tokenization-vault
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SERVER_PORT
+        value: "10000"
+      - key: DB_HOST
+        fromDatabase: { name: enterprise-payment-db, property: host }
+      - key: DB_PORT
+        fromDatabase: { name: enterprise-payment-db, property: port }
+      - key: DB_NAME
+        fromDatabase: { name: enterprise-payment-db, property: database }
+      - key: DB_USER
+        fromDatabase: { name: enterprise-payment-db, property: user }
+      - key: DB_PASSWORD
+        fromDatabase: { name: enterprise-payment-db, property: password }
+      - key: VAULT_ENCRYPTION_KEY
+        generateValue: true
+
+  - type: web
+    name: enterprise-card-management
+    runtime: docker
+    plan: free
+    region: singapore
+    rootDir: card-management
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SERVER_PORT
+        value: "10000"
+      - key: DB_HOST
+        fromDatabase: { name: enterprise-payment-db, property: host }
+      - key: DB_PORT
+        fromDatabase: { name: enterprise-payment-db, property: port }
+      - key: DB_NAME
+        fromDatabase: { name: enterprise-payment-db, property: database }
+      - key: DB_USER
+        fromDatabase: { name: enterprise-payment-db, property: user }
+      - key: DB_PASSWORD
+        fromDatabase: { name: enterprise-payment-db, property: password }
+      - key: VAULT_URL
+        fromService:
+          name: enterprise-tokenization-vault
+          type: web
+          property: hostport
+
+databases:
+  - name: enterprise-payment-db
+    plan: free
+    region: singapore
+    databaseName: paymentsdb
+    user: payments
+    postgresMajorVersion: "17"
