@@ -157,13 +157,7 @@ Bank / Merchant / Mobile App
                           └───────────────────┘         └──────────────────────┘
 ```
 
-**Note on fraud-risk-engine wiring**: today it's only wired as a passive Kafka
-consumer (watches transactions after the fact) plus a standalone `/score`
-endpoint any caller can invoke directly. It is **not yet called synchronously
-by `payment-switch` or `core-processing-engine`** before a transaction is
-approved — that's a real gap, not a design choice. Wiring the switch or core
-engine to call `fraud-risk-engine`'s `/api/v1/fraud/score` before finalizing
-the authorization decision is the natural next step to close this loop.
+**Fraud decision wiring**: `payment-switch` now calls `fraud-risk-engine` synchronously before issuer authorization. `BLOCK` is declined immediately with ISO-style response code `05`; an unavailable or invalid fraud response fails closed with `91`; `REVIEW` is recorded and continues to issuer authorization in this reference implementation. Kafka monitoring remains in place for post-decision analytics.
 
 ## What's still not built
 

@@ -7,6 +7,9 @@ spring:
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
 
+fraud-risk-engine:
+  url: ${FRAUD_URL:http://localhost:8083}
+
 issuer:
   core-processing-engine:
     url: ${CORE_ENGINE_URL:http://localhost:8081}

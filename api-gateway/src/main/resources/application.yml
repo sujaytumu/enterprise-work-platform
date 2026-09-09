@@ -7,6 +7,48 @@ spring:
   cloud:
     gateway:
       routes:
+        - id: gateway-health
+          uri: http://localhost:8080
+          predicates:
+            - Path=/health/8080
+          filters:
+            - SetPath=/actuator/health
+        - id: core-health
+          uri: ${CORE_ENGINE_URL:http://localhost:8081}
+          predicates:
+            - Path=/health/8081
+          filters:
+            - SetPath=/actuator/health
+        - id: switch-health
+          uri: ${SWITCH_URL:http://localhost:8082}
+          predicates:
+            - Path=/health/8082
+          filters:
+            - SetPath=/actuator/health
+        - id: fraud-health
+          uri: ${FRAUD_URL:http://localhost:8083}
+          predicates:
+            - Path=/health/8083
+          filters:
+            - SetPath=/actuator/health
+        - id: vault-health
+          uri: ${VAULT_URL:http://localhost:8084}
+          predicates:
+            - Path=/health/8084
+          filters:
+            - SetPath=/actuator/health
+        - id: cards-health
+          uri: ${CMS_URL:http://localhost:8085}
+          predicates:
+            - Path=/health/8085
+          filters:
+            - SetPath=/actuator/health
+        - id: settlement-health
+          uri: ${SETTLEMENT_URL:http://localhost:8086}
+          predicates:
+            - Path=/health/8086
+          filters:
+            - SetPath=/actuator/health
         - id: payment-switch
           uri: ${SWITCH_URL:http://localhost:8082}
           predicates:

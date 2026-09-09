@@ -44,6 +44,35 @@ simplified vs. a real production system.
 - PostgreSQL (via Docker Compose) / H2 for quick local runs
 - Docker Compose for local dev; Kubernetes manifests in `deploy/k8s` for real clusters
 
+## Quick start
+
+For the complete local stack:
+
+```bash
+docker compose up --build
+```
+
+Open the dashboard at **http://localhost:3000**.
+
+The client dashboard is served by the `client` container. If you only want backend verification, use the smoke and E2E commands below.
+
+Verify the complete runtime in another terminal:
+
+```bash
+bash scripts/smoke-test.sh
+
+# Run the synthetic end-to-end payment flow
+DIRECT_E2E=true bash scripts/e2e-demo.sh
+```
+
+Useful shortcuts are also available:
+
+```bash
+make up
+make verify
+make down
+```
+
 ## Running locally
 
 ```bash
@@ -81,20 +110,16 @@ request across every service it touched. Full details in
 
 ## Pushing this to your GitHub repo
 
-This zip is not connected to git yet. From the extracted folder:
+## CI/CD
 
-```bash
-cd enterprise-work-platform
-git init
-git remote add origin https://github.com/sujaytumu/enterprise-work-platform.git
-git add .
-git commit -m "Initial scaffold: core processing engine + payment switch"
-git branch -M main
-git push -u origin main
-```
+Pull requests are validated with:
 
-(Use a freshly generated token or SSH key — never reuse a token that was ever
-pasted in a chat or logged anywhere.)
+- Java build/test jobs for every backend service
+- React client build
+- Docker image builds
+- Full Docker Compose runtime smoke verification
+
+A manual deployment workflow is also included in `.github/workflows/deploy.yml`. It builds images to GitHub Container Registry and can deploy to Kubernetes after a cluster kubeconfig is provided as the `KUBE_CONFIG_DATA` GitHub environment secret.
 
 ## Deploying to a real cluster
 

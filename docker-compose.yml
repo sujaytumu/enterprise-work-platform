@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.1
@@ -21,6 +19,12 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+      start_period: 20s
 
   postgres:
     image: postgres:16-alpine
@@ -32,12 +36,19 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U payments -d paymentsdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
 
   core-processing-engine:
     build: ./core-processing-engine
     depends_on:
-      - postgres
-      - kafka
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
     ports:
       - "8081:8081"
     environment:
@@ -51,19 +62,24 @@ services:
   payment-switch:
     build: ./payment-switch
     depends_on:
-      - kafka
-      - core-processing-engine
+      kafka:
+        condition: service_healthy
+      core-processing-engine:
+        condition: service_started
     ports:
       - "8082:8082"
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       CORE_ENGINE_URL: http://core-processing-engine:8081
+      FRAUD_URL: http://fraud-risk-engine:8083
 
   fraud-risk-engine:
     build: ./fraud-risk-engine
     depends_on:
-      - postgres
-      - kafka
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
     ports:
       - "8083:8083"
     environment:
@@ -77,7 +93,8 @@ services:
   tokenization-vault:
     build: ./tokenization-vault
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     ports:
       - "8084:8084"
     environment:
@@ -92,8 +109,10 @@ services:
   card-management:
     build: ./card-management
     depends_on:
-      - postgres
-      - tokenization-vault
+      postgres:
+        condition: service_healthy
+      tokenization-vault:
+        condition: service_started
     ports:
       - "8085:8085"
     environment:
@@ -107,8 +126,10 @@ services:
   clearing-settlement:
     build: ./clearing-settlement
     depends_on:
-      - postgres
-      - kafka
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
     ports:
       - "8086:8086"
     environment:
@@ -122,12 +143,18 @@ services:
   api-gateway:
     build: ./api-gateway
     depends_on:
-      - core-processing-engine
-      - payment-switch
-      - fraud-risk-engine
-      - tokenization-vault
-      - card-management
-      - clearing-settlement
+      core-processing-engine:
+        condition: service_started
+      payment-switch:
+        condition: service_started
+      fraud-risk-engine:
+        condition: service_started
+      tokenization-vault:
+        condition: service_started
+      card-management:
+        condition: service_started
+      clearing-settlement:
+        condition: service_started
     ports:
       - "8080:8080"
     # nosecurity profile: local demo only, disables JWT validation.
@@ -141,6 +168,14 @@ services:
       VAULT_URL: http://tokenization-vault:8084
       CMS_URL: http://card-management:8085
       SETTLEMENT_URL: http://clearing-settlement:8086
+
+  client:
+    build: ./client
+    depends_on:
+      api-gateway:
+        condition: service_started
+    ports:
+      - "3000:80"
 
 volumes:
   pgdata:

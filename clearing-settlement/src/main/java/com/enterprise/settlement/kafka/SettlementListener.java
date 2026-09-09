@@ -2,6 +2,7 @@ package com.enterprise.settlement.kafka;
 
 import com.enterprise.settlement.model.SettledTransaction;
 import com.enterprise.settlement.repository.SettledTransactionRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -38,6 +39,9 @@ public class SettlementListener {
                     node.get("merchantId").asText(),
                     new BigDecimal(node.get("amount").asText()));
             repository.save(record);
+            log.info("Recorded authorized transaction {} for settlement", node.get("transactionId").asText());
+        } catch (DataIntegrityViolationException duplicate) {
+            log.info("Ignoring duplicate settlement event: {}", payload);
         } catch (Exception e) {
             log.error("Failed to record transaction for settlement: {}", payload, e);
         }

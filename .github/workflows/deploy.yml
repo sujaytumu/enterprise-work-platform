@@ -1,0 +1,65 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Deployment environment
+        required: true
+        default: staging
+        type: choice
+        options:
+          - staging
+          - production
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-images:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - core-processing-engine
+          - payment-switch
+          - fraud-risk-engine
+          - tokenization-vault
+          - card-management
+          - clearing-settlement
+          - api-gateway
+          - client
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: ./${{ matrix.service }}
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:${{ github.sha }}
+
+  deploy:
+    needs: build-images
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Validate deployment configuration
+        run: |
+          test -n "${{ secrets.KUBE_CONFIG_DATA }}"
+          echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 -d > kubeconfig
+          chmod 600 kubeconfig
+      - name: Configure kubectl
+        run: |
+          mkdir -p "$HOME/.kube"
+          mv kubeconfig "$HOME/.kube/config"
+          kubectl cluster-info
+      - name: Deploy manifests
+        run: |
+          kubectl apply -k deploy/k8s
+          kubectl rollout status deployment/api-gateway --timeout=180s

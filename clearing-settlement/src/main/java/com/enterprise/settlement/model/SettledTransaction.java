@@ -11,7 +11,7 @@ import java.time.Instant;
  * continuously; SettlementListener does exactly that here.
  */
 @Entity
-@Table(name = "settled_transactions")
+@Table(name = "settled_transactions", uniqueConstraints = @UniqueConstraint(name = "uk_settled_transaction_id", columnNames = "transactionId"))
 public class SettledTransaction {
 
     @Id
