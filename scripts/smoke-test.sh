@@ -33,8 +33,8 @@ done
 curl -fsS http://localhost:3000/ >/dev/null
 echo "OK: client"
 
-for port in 8080 8081 8082 8083 8084 8085 8086; do
-  curl -fsS "http://localhost:3000/health/${port}" >/dev/null
+for port in 8081 8082 8083 8084 8085 8086; do
+  curl -fsS "http://localhost:8080/health/${port}" >/dev/null
 done
-echo "OK: same-origin gateway health aggregation"
+echo "OK: API gateway health aggregation"
 echo "Smoke test passed."
