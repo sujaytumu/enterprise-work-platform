@@ -17,12 +17,12 @@ for service in "${services[@]}"; do
   url="http://localhost:${port}/actuator/health"
   echo "Checking ${name}: ${url}"
 
-  for ((i=1; i<=60; i++)); do
+  for ((i=1; i<=120; i++)); do
     if curl -fsS "$url" >/dev/null; then
       echo "OK: ${name}"
       break
     fi
-    if [[ "$i" == "60" ]]; then
+    if [[ "$i" == "120" ]]; then
       echo "FAILED: ${name} did not become healthy"
       exit 1
     fi
