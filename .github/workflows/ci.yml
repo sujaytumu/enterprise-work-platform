@@ -126,7 +126,7 @@ jobs:
       - name: Run runtime smoke test
         run: bash scripts/smoke-test.sh
       - name: Run synthetic end-to-end demo
-        run: bash scripts/e2e-demo.sh
+        run: DIRECT_E2E=true bash scripts/e2e-demo.sh
       - name: Print service logs on failure
         if: failure()
         run: docker compose logs --no-color
