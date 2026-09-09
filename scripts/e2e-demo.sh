@@ -22,7 +22,7 @@ CUSTOMER_ID="demo-customer-$(date +%s)"
 echo "1/6 Issuing demo card..."
 CARD=$(curl -fsS -X POST "$CARD_URL/api/v1/cards" \
   -H 'Content-Type: application/json' \
-  -d "{\"customerId\":\"$CUSTOMER_ID\",\"cardType\":\"DEBIT\",\"binPrefix\":\"411111\"}")
+  -d "{\"customerId\":\"$CUSTOMER_ID\",\"cardType\":\"VIRTUAL\",\"binPrefix\":\"411111\"}")
 CARD_ID=$(echo "$CARD" | python3 -c 'import sys,json; print(json.load(sys.stdin)["id"])')
 echo "Card: $CARD_ID"
 
