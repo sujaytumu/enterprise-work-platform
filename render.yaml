@@ -1,0 +1,20 @@
+# Single public application + existing private PostgreSQL.
+# Render injects the database connection string; no credentials are stored in Git.
+services:
+  - type: web
+    name: enterprise-work-platform
+    runtime: node
+    region: singapore
+    plan: free
+    branch: main
+    buildCommand: npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: enterprise-platform-db
+          property: connectionString
