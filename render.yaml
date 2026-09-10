@@ -1,8 +1,7 @@
-# Single public application + existing private PostgreSQL.
-# Render injects the database connection string; no credentials are stored in Git.
+# One public web application + one private Render PostgreSQL database.
 services:
   - type: web
-    name: enterprise-work-platform
+    name: enterprise-work-platform-live
     runtime: node
     region: singapore
     plan: free
@@ -16,5 +15,11 @@ services:
         value: production
       - key: DATABASE_URL
         fromDatabase:
-          name: enterprise-platform-db
+          name: enterprise-platform-live-db
           property: connectionString
+
+databases:
+  - name: enterprise-platform-live-db
+    plan: free
+    region: singapore
+    postgresMajorVersion: "16"
