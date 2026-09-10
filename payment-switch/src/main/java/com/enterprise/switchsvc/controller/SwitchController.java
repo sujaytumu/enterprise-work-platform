@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 @RestController
+@CrossOrigin(origins = "*")
 @RequestMapping("/api/v1/switch")
 public class SwitchController {
 
