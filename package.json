@@ -1,0 +1,7 @@
+{
+  "name":"enterprise-work-platform",
+  "version":"1.0.0",
+  "private":true,
+  "scripts":{"start":"node server.js","build":"cd client && npm ci --legacy-peer-deps && npm run build"},
+  "dependencies":{"express":"^4.21.2","pg":"^8.13.1"}
+}
