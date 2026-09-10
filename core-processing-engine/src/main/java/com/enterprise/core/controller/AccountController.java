@@ -14,6 +14,7 @@ import java.util.Map;
  * Card Management System (planned next phase), not a raw REST POST.
  */
 @RestController
+@CrossOrigin(origins = "*")
 @RequestMapping("/api/v1/accounts")
 public class AccountController {
 
